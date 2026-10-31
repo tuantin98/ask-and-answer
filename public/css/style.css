@@ -1,0 +1,132 @@
+:root {
+  --bg: #f4f5fb;
+  --card: #ffffff;
+  --text: #1d2033;
+  --muted: #6b7088;
+  --border: #e2e4ef;
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --green: #16a34a;
+  --orange: #ea580c;
+  --red: #dc2626;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+.narrow { max-width: 440px; }
+
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+.subtitle { color: var(--muted); margin: 0 0 24px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.04);
+}
+
+label { display: block; font-weight: 600; font-size: 0.9rem; margin: 12px 0 6px; }
+
+input[type="text"] {
+  width: 100%;
+  font-size: 1.05rem;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type="text"]:focus { border-color: var(--primary); }
+input[type="text"]:disabled { background: #eef0f6; color: var(--muted); cursor: not-allowed; }
+#roomCodeInput { text-transform: uppercase; letter-spacing: 4px; font-weight: 700; }
+
+button {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--primary);
+  transition: background 0.15s, opacity 0.15s, transform 0.05s;
+}
+button:hover:not(:disabled) { background: var(--primary-dark); }
+button:active:not(:disabled) { transform: scale(0.98); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.full { width: 100%; margin-top: 16px; }
+button.green { background: var(--green); }
+button.orange { background: var(--orange); }
+button.gray { background: #64748b; }
+button.green:hover:not(:disabled) { background: #15803d; }
+button.orange:hover:not(:disabled) { background: #c2410c; }
+button.gray:hover:not(:disabled) { background: #475569; }
+
+.error { color: var(--red); font-size: 0.9rem; min-height: 1.2em; margin: 10px 0 0; }
+.hidden { display: none !important; }
+
+/* Status banner */
+.status {
+  text-align: center;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  background: #eef0f6;
+  color: var(--muted);
+}
+.status.open { background: #dcfce7; color: var(--green); }
+.status.locked { background: #fee2e2; color: var(--red); }
+.status.sent { background: #e0e7ff; color: var(--primary); }
+
+.room-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+
+/* Host */
+.room-code {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: var(--primary);
+  margin: 4px 0;
+}
+.controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.timer { font-variant-numeric: tabular-nums; font-size: 1.4rem; font-weight: 700; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.feed { list-style: none; margin: 0; padding: 0; }
+.feed li {
+  display: grid;
+  grid-template-columns: 32px minmax(80px, 160px) 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+  animation: pop 0.25s ease-out;
+}
+.feed li:first-child { background: #fef9c3; border-radius: 8px; }
+.feed .rank { font-weight: 800; color: var(--muted); text-align: center; }
+.feed .name { font-weight: 700; overflow-wrap: anywhere; }
+.feed .answer { overflow-wrap: anywhere; }
+.feed .time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--primary); }
+.empty { color: var(--muted); text-align: center; padding: 20px 0; }
+.players { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+
+@keyframes pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 560px) {
+  .controls { grid-template-columns: 1fr; }
+  .feed li { grid-template-columns: 24px 1fr auto; }
+  .feed .answer { grid-column: 2 / 4; }
+}

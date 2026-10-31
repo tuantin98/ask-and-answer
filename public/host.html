@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask &amp; Answer – Host</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Ask &amp; Answer – Host</h1>
+    <p class="subtitle">Tạo phòng, mở câu hỏi và xem câu trả lời theo thời gian thực.</p>
+
+    <!-- Before a room exists -->
+    <section id="createScreen" class="card">
+      <button id="createBtn" class="full">TẠO PHÒNG</button>
+      <p id="hostError" class="error"></p>
+    </section>
+
+    <!-- Room dashboard -->
+    <section id="roomScreen" class="hidden">
+      <div class="card row-between">
+        <div>
+          <div class="subtitle" style="margin:0">Mã phòng</div>
+          <div id="roomCode" class="room-code"></div>
+          <div class="players">Người chơi (<span id="playerCount">0</span>): <span id="playerNames">—</span></div>
+        </div>
+        <button id="newRoomBtn" class="gray">Tạo phòng mới</button>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom:14px">
+          <div id="status" class="status" style="margin:0;flex:1">Chưa mở câu hỏi</div>
+          <div id="timer" class="timer">0.00s</div>
+        </div>
+        <div class="controls">
+          <button id="startBtn" class="green">MỞ CÂU HỎI</button>
+          <button id="lockBtn" class="orange" disabled>KHÓA / DỪNG</button>
+          <button id="resetBtn" class="gray">XÓA LƯỢT</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom:8px">
+          <strong>Câu trả lời</strong>
+          <span class="players"><span id="answerCount">0</span> đã trả lời</span>
+        </div>
+        <ul id="feed" class="feed"></ul>
+        <p id="emptyFeed" class="empty">Chưa có câu trả lời nào.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/host.js"></script>
+</body>
+</html>

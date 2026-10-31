@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask &amp; Answer – Người chơi</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="container narrow">
+    <h1>Ask &amp; Answer</h1>
+    <p class="subtitle">Trả lời nhanh nhất để giành chiến thắng!</p>
+
+    <!-- Join screen -->
+    <section id="joinScreen" class="card">
+      <form id="joinForm">
+        <label for="roomCodeInput">Mã phòng</label>
+        <input id="roomCodeInput" type="text" maxlength="10" autocomplete="off" placeholder="VD: AB3KD" required />
+        <label for="nameInput">Họ tên</label>
+        <input id="nameInput" type="text" maxlength="30" autocomplete="off" placeholder="Tên của bạn" required />
+        <button type="submit" class="full">VÀO PHÒNG</button>
+        <p id="joinError" class="error"></p>
+      </form>
+    </section>
+
+    <!-- Game screen -->
+    <section id="gameScreen" class="card hidden">
+      <div class="room-meta">
+        <span>Phòng: <strong id="roomLabel"></strong></span>
+        <span>Bạn: <strong id="nameLabel"></strong></span>
+      </div>
+      <div id="status" class="status">Đang chờ Host mở câu hỏi...</div>
+      <form id="answerForm">
+        <input id="answerInput" type="text" maxlength="200" autocomplete="off" placeholder="Nhập câu trả lời..." disabled />
+        <button id="submitBtn" type="submit" class="full green" disabled>GỬI CÂU TRẢ LỜI</button>
+        <p id="answerError" class="error"></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- Socket.io client is served automatically by the Socket.io server -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/player.js"></script>
+</body>
+</html>
