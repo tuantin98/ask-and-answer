@@ -122,6 +122,32 @@ button.gray:hover:not(:disabled) { background: #475569; }
 .feed .time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--primary); }
 .empty { color: var(--muted); text-align: center; padding: 20px 0; }
 .players { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.feed .attempt { font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+
+.toggle { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; font-weight: 500; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+/* Live player list */
+.live-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--green); margin-right: 8px; vertical-align: middle;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.player-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.player-list li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  background: #eef0f6; font-weight: 600; overflow-wrap: anywhere;
+}
+.player-list li.new { animation: pop 0.25s ease-out; }
+.player-list li.answered { background: #dcfce7; color: var(--green); }
+.player-list .since { font-weight: 400; font-size: 0.8rem; color: var(--muted); }
+.player-list .badge {
+  font-size: 0.75rem; font-weight: 700; color: #fff; background: var(--green);
+  border-radius: 999px; padding: 1px 7px;
+}
+
+@keyframes pulse { 50% { opacity: 0.35; } }
 
 @keyframes pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 

@@ -23,7 +23,6 @@
         <div>
           <div class="subtitle" style="margin:0">Mã phòng</div>
           <div id="roomCode" class="room-code"></div>
-          <div class="players">Người chơi (<span id="playerCount">0</span>): <span id="playerNames">—</span></div>
         </div>
         <button id="newRoomBtn" class="gray">Tạo phòng mới</button>
       </div>
@@ -38,12 +37,25 @@
           <button id="lockBtn" class="orange" disabled>KHÓA / DỪNG</button>
           <button id="resetBtn" class="gray">XÓA LƯỢT</button>
         </div>
+        <label class="toggle">
+          <input id="multiToggle" type="checkbox" />
+          <span>Cho phép người chơi trả lời nhiều lần trong một câu</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom:8px">
+          <strong><span class="live-dot"></span>Người chơi đang online</strong>
+          <span class="players"><span id="playerCount">0</span> người</span>
+        </div>
+        <ul id="playerList" class="player-list"></ul>
+        <p id="emptyPlayers" class="empty">Chưa có ai vào phòng.</p>
       </div>
 
       <div class="card">
         <div class="row-between" style="margin-bottom:8px">
           <strong>Câu trả lời</strong>
-          <span class="players"><span id="answerCount">0</span> đã trả lời</span>
+          <span id="answerCount" class="players">0 người đã trả lời</span>
         </div>
         <ul id="feed" class="feed"></ul>
         <p id="emptyFeed" class="empty">Chưa có câu trả lời nào.</p>
