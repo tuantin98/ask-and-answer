@@ -26,6 +26,9 @@ function renderStatus() {
   statusEl.className = `status ${roundStatus === 'idle' ? '' : roundStatus}`;
   statusEl.textContent = labels[roundStatus];
   lockBtn.disabled = roundStatus !== 'open';
+  // Reopening a locked round resumes it (answers kept); only "XÓA LƯỢT" clears them.
+  startBtn.disabled = roundStatus === 'open';
+  startBtn.textContent = roundStatus === 'locked' ? 'MỞ LẠI' : 'MỞ CÂU HỎI';
 }
 
 function answerRow(a, index) {

@@ -24,7 +24,8 @@ app.get('/host', (req, res) => res.sendFile(path.join(__dirname, 'public', 'host
  * rooms[code] = {
  *   code, hostSocketId, cleanupTimer,
  *   status: 'idle' | 'open' | 'locked',
- *   startTime: number | null,            // Date.now() when the round was opened
+ *   startTime: number | null,            // Date.now() when the round was opened (shifted forward by paused time)
+ *   pausedAt: number | null,             // Date.now() when the round was locked; null otherwise
  *   roundId: number,                     // increments on every "start" so clients can detect a new round
  *   allowMultiple: boolean,              // host setting: may a player answer more than once per round?
  *   players: Map<socketId, { name, joinedAt }>,
@@ -46,7 +47,8 @@ function generateRoomCode() {
 
 function publicState(room) {
   // `elapsed` lets clients run a local timer without relying on synced clocks.
-  const elapsed = room.startTime ? (Date.now() - room.startTime) / 1000 : 0;
+  // A locked round stays frozen at the moment it was locked.
+  const elapsed = room.startTime ? ((room.pausedAt ?? Date.now()) - room.startTime) / 1000 : 0;
   return { code: room.code, status: room.status, roundId: room.roundId, allowMultiple: room.allowMultiple, elapsed };
 }
 
@@ -92,6 +94,7 @@ io.on('connection', (socket) => {
       cleanupTimer: null,
       status: 'idle',
       startTime: null,
+      pausedAt: null,
       roundId: 0,
       allowMultiple: false,
       players: new Map(),
@@ -121,15 +124,20 @@ io.on('connection', (socket) => {
     return room && room.hostSocketId === socket.id ? room : null;
   };
 
-  // host:start — open a new round: record startTime, clear old answers, unlock players.
+  // host:start — open a new round, or resume a locked one keeping its answers.
+  // Answers are only ever cleared by host:reset.
   socket.on('host:start', () => {
     const room = hostedRoom();
-    if (!room) return;
+    if (!room || room.status === 'open') return;
+    if (room.status === 'locked') {
+      // Skip the paused time so the timer and response times continue where they stopped.
+      room.startTime += Date.now() - room.pausedAt;
+    } else {
+      room.startTime = Date.now();
+      room.roundId += 1;
+    }
     room.status = 'open';
-    room.startTime = Date.now();
-    room.roundId += 1;
-    room.answers = [];
-    room.answerCounts.clear();
+    room.pausedAt = null;
     broadcastRoundState(room);
     emitHostSnapshot(room);
   });
@@ -139,6 +147,7 @@ io.on('connection', (socket) => {
     const room = hostedRoom();
     if (!room || room.status !== 'open') return;
     room.status = 'locked';
+    room.pausedAt = Date.now();
     broadcastRoundState(room);
     emitHostSnapshot(room);
   });
@@ -158,6 +167,7 @@ io.on('connection', (socket) => {
     if (!room) return;
     room.status = 'idle';
     room.startTime = null;
+    room.pausedAt = null;
     room.answers = [];
     room.answerCounts.clear();
     broadcastRoundState(room);
