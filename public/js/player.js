@@ -1,4 +1,5 @@
-// Player client: join a room, wait for the host to open a round, submit one answer.
+// Player client: join a room, wait for the host to open a round, submit an answer
+// (or several, if the host allows multiple answers).
 const socket = io();
 
 const $ = (id) => document.getElementById(id);
@@ -17,21 +18,25 @@ const answerError = $('answerError');
 let session = null;        // { code, name } once joined
 let roundStatus = 'idle';  // mirrors the server: idle | open | locked
 let roundId = 0;           // changes whenever the host opens a new question
-let submitted = null;      // { responseTime } after a successful submit this round
+let allowMultiple = false; // host setting: can we keep answering after the first submit?
+let submitted = null;      // { count, responseTime of the latest } after a successful submit this round
 
 // Prefill the room code from ?room=XXXXX (handy for sharing a link).
 const urlRoom = new URLSearchParams(location.search).get('room');
 if (urlRoom) roomCodeInput.value = urlRoom.toUpperCase();
 
 function render() {
-  const canAnswer = roundStatus === 'open' && !submitted;
+  const canAnswer = roundStatus === 'open' && (!submitted || allowMultiple);
   answerInput.disabled = !canAnswer;
   submitBtn.disabled = !canAnswer;
 
   statusEl.className = 'status';
   if (submitted) {
     statusEl.classList.add('sent');
-    statusEl.textContent = `Đã gửi thành công! Thời gian: ${submitted.responseTime.toFixed(2)} giây`;
+    const time = `Thời gian: ${submitted.responseTime.toFixed(2)} giây`;
+    statusEl.textContent = canAnswer
+      ? `Đã gửi ${submitted.count} lần (lần gần nhất: ${submitted.responseTime.toFixed(2)} giây) – bạn có thể gửi tiếp.`
+      : `Đã gửi thành công! ${time}`;
   } else if (roundStatus === 'open') {
     statusEl.classList.add('open');
     statusEl.textContent = 'Câu hỏi đã mở – Trả lời ngay!';
@@ -59,7 +64,8 @@ function join(code, name) {
     sessionStorage.setItem('aa-player', JSON.stringify(session));
     roundStatus = res.state.status;
     roundId = res.state.roundId;
-    submitted = res.alreadyAnswered ? { responseTime: res.alreadyAnswered.responseTime } : null;
+    allowMultiple = res.state.allowMultiple;
+    submitted = res.myAnswers;
 
     $('roomLabel').textContent = session.code;
     $('nameLabel').textContent = session.name;
@@ -87,7 +93,7 @@ answerForm.addEventListener('submit', (e) => {
   // player:answer — send the text; the server replies with our response time.
   socket.emit('player:answer', { text }, (res) => {
     if (res.ok) {
-      submitted = { responseTime: res.responseTime };
+      submitted = { count: res.count, responseTime: res.responseTime };
       answerInput.value = '';
     } else {
       answerError.textContent = res.error;
@@ -107,6 +113,7 @@ socket.on('round:state', (state) => {
   if (state.status === 'idle') submitted = null;
   roundId = state.roundId;
   roundStatus = state.status;
+  allowMultiple = state.allowMultiple;
   render();
 });
 

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const MAX_ANSWER_LENGTH = 200;
 const MAX_NAME_LENGTH = 30;
 const ROOM_TTL_MS = 10 * 60 * 1000; // delete a room 10 minutes after its host disconnects
+const MAX_ANSWERS_PER_ROUND = 20; // per-player cap when multiple answers are allowed
 
 const app = express();
 const server = http.createServer(app);
@@ -25,9 +26,10 @@ app.get('/host', (req, res) => res.sendFile(path.join(__dirname, 'public', 'host
  *   status: 'idle' | 'open' | 'locked',
  *   startTime: number | null,            // Date.now() when the round was opened
  *   roundId: number,                     // increments on every "start" so clients can detect a new round
- *   players: Map<socketId, name>,
- *   answers: [{ name, text, responseTime }],
- *   answeredNames: Set<lowercased name>  // one answer per player per round
+ *   allowMultiple: boolean,              // host setting: may a player answer more than once per round?
+ *   players: Map<socketId, { name, joinedAt }>,
+ *   answers: [{ name, text, responseTime, attempt }],
+ *   answerCounts: Map<lowercased name, number>  // answers per player this round
  * }
  */
 const rooms = {};
@@ -45,11 +47,18 @@ function generateRoomCode() {
 function publicState(room) {
   // `elapsed` lets clients run a local timer without relying on synced clocks.
   const elapsed = room.startTime ? (Date.now() - room.startTime) / 1000 : 0;
-  return { code: room.code, status: room.status, roundId: room.roundId, elapsed };
+  return { code: room.code, status: room.status, roundId: room.roundId, allowMultiple: room.allowMultiple, elapsed };
 }
 
+// Connected players in join order: [{ name, joinedAt }].
 function playerList(room) {
   return [...room.players.values()];
+}
+
+// A player's answers this round: { count, responseTime of the latest } or null.
+function myAnswers(room, name) {
+  const mine = room.answers.filter((a) => a.name.toLowerCase() === name.toLowerCase());
+  return mine.length ? { count: mine.length, responseTime: mine[mine.length - 1].responseTime } : null;
 }
 
 // Send the full room snapshot to the host (used on create/rejoin/reset).
@@ -84,9 +93,10 @@ io.on('connection', (socket) => {
       status: 'idle',
       startTime: null,
       roundId: 0,
+      allowMultiple: false,
       players: new Map(),
       answers: [],
-      answeredNames: new Set(),
+      answerCounts: new Map(),
     };
     socket.data.hostOf = code;
     ack?.({ ok: true, code });
@@ -119,7 +129,7 @@ io.on('connection', (socket) => {
     room.startTime = Date.now();
     room.roundId += 1;
     room.answers = [];
-    room.answeredNames.clear();
+    room.answerCounts.clear();
     broadcastRoundState(room);
     emitHostSnapshot(room);
   });
@@ -133,6 +143,15 @@ io.on('connection', (socket) => {
     emitHostSnapshot(room);
   });
 
+  // host:settings — change room options (currently only "allow multiple answers").
+  socket.on('host:settings', ({ allowMultiple } = {}) => {
+    const room = hostedRoom();
+    if (!room) return;
+    room.allowMultiple = Boolean(allowMultiple);
+    broadcastRoundState(room);
+    emitHostSnapshot(room);
+  });
+
   // host:reset — clear answers and go back to "waiting" for the next question.
   socket.on('host:reset', () => {
     const room = hostedRoom();
@@ -140,7 +159,7 @@ io.on('connection', (socket) => {
     room.status = 'idle';
     room.startTime = null;
     room.answers = [];
-    room.answeredNames.clear();
+    room.answerCounts.clear();
     broadcastRoundState(room);
     emitHostSnapshot(room);
   });
@@ -155,21 +174,21 @@ io.on('connection', (socket) => {
     if (!name) return ack?.({ ok: false, error: 'Vui lòng nhập tên.' });
 
     const taken = [...room.players.entries()].some(
-      ([id, n]) => id !== socket.id && n.toLowerCase() === name.toLowerCase()
+      ([id, p]) => id !== socket.id && p.name.toLowerCase() === name.toLowerCase()
     );
     if (taken) return ack?.({ ok: false, error: 'Tên này đã có người dùng trong phòng.' });
 
     socket.join(room.code);
     socket.data.playerOf = room.code;
     socket.data.name = name;
-    room.players.set(socket.id, name);
+    room.players.set(socket.id, { name, joinedAt: room.players.get(socket.id)?.joinedAt ?? Date.now() });
 
     ack?.({
       ok: true,
       name,
       state: publicState(room),
       // Lets a reconnecting player keep their "already answered" status.
-      alreadyAnswered: room.answers.find((a) => a.name.toLowerCase() === name.toLowerCase()) || null,
+      myAnswers: myAnswers(room, name),
     });
     if (room.hostSocketId) io.to(room.hostSocketId).emit('host:players', playerList(room));
   });
@@ -186,13 +205,17 @@ io.on('connection', (socket) => {
     if (!text) return ack?.({ ok: false, error: 'Câu trả lời không được để trống.' });
 
     const key = name.toLowerCase();
-    if (room.answeredNames.has(key)) return ack?.({ ok: false, error: 'Bạn đã gửi câu trả lời rồi.' });
+    const count = room.answerCounts.get(key) || 0;
+    if (count && !room.allowMultiple) return ack?.({ ok: false, error: 'Bạn đã gửi câu trả lời rồi.' });
+    if (count >= MAX_ANSWERS_PER_ROUND) {
+      return ack?.({ ok: false, error: `Tối đa ${MAX_ANSWERS_PER_ROUND} lần trả lời mỗi câu.` });
+    }
 
-    const answer = { name, text, responseTime: (receivedAt - room.startTime) / 1000 };
-    room.answeredNames.add(key);
+    const answer = { name, text, responseTime: (receivedAt - room.startTime) / 1000, attempt: count + 1 };
+    room.answerCounts.set(key, answer.attempt);
     room.answers.push(answer); // arrival order == time order, so the list stays sorted
 
-    ack?.({ ok: true, responseTime: answer.responseTime });
+    ack?.({ ok: true, responseTime: answer.responseTime, count: answer.attempt });
     // Push the new answer to the host immediately.
     if (room.hostSocketId) io.to(room.hostSocketId).emit('host:answer', answer);
   });

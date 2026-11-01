@@ -13,6 +13,8 @@ const feed = $('feed');
 
 let roomCode = sessionStorage.getItem('aa-host-room');
 let answers = [];
+let players = [];        // [{ name, joinedAt }] of connected players
+let knownPlayers = new Set(); // names already rendered, so only newcomers animate
 let roundStatus = 'idle';
 let timerStart = null;   // local performance.now() matching the server's startTime
 let rafId = null;
@@ -41,19 +43,62 @@ function answerRow(a, index) {
     span.textContent = text;
     li.appendChild(span);
   }
+  if (a.attempt > 1) {
+    const attempt = document.createElement('span');
+    attempt.className = 'attempt';
+    attempt.textContent = ` (lần ${a.attempt})`;
+    li.querySelector('.name').appendChild(attempt);
+  }
   return li;
+}
+
+// Number of answers per lowercased name in the current round.
+function answerCounts() {
+  const counts = new Map();
+  for (const a of answers) counts.set(a.name.toLowerCase(), (counts.get(a.name.toLowerCase()) || 0) + 1);
+  return counts;
 }
 
 function renderFeed() {
   answers.sort((a, b) => a.responseTime - b.responseTime); // fastest on top
   feed.replaceChildren(...answers.map(answerRow));
-  $('answerCount').textContent = answers.length;
+  const people = answerCounts().size;
+  $('answerCount').textContent =
+    `${people} người đã trả lời` + (answers.length > people ? ` · ${answers.length} lượt` : '');
   $('emptyFeed').classList.toggle('hidden', answers.length > 0);
+  renderPlayers();
 }
 
-function renderPlayers(players) {
+function playerChip(p, counts) {
+  const li = document.createElement('li');
+  const count = counts.get(p.name.toLowerCase()) || 0;
+  if (!knownPlayers.has(p.name)) li.classList.add('new');
+  if (count) li.classList.add('answered');
+
+  const name = document.createElement('span');
+  name.textContent = p.name;
+  const since = document.createElement('span');
+  since.className = 'since';
+  since.textContent = new Date(p.joinedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  since.title = 'Thời điểm vào phòng';
+  li.append(name, since);
+
+  if (count) {
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = count > 1 ? `✓ ${count}` : '✓';
+    badge.title = `Đã trả lời ${count} lần`;
+    li.appendChild(badge);
+  }
+  return li;
+}
+
+function renderPlayers() {
+  const counts = answerCounts();
+  $('playerList').replaceChildren(...players.map((p) => playerChip(p, counts)));
+  knownPlayers = new Set(players.map((p) => p.name));
   $('playerCount').textContent = players.length;
-  $('playerNames').textContent = players.length ? players.join(', ') : '—';
+  $('emptyPlayers').classList.toggle('hidden', players.length > 0);
 }
 
 // The timer runs locally; the server's `elapsed` keeps it in sync after a reload.
@@ -102,6 +147,9 @@ $('newRoomBtn').addEventListener('click', () => {
 startBtn.addEventListener('click', () => socket.emit('host:start'));
 lockBtn.addEventListener('click', () => socket.emit('host:lock'));
 resetBtn.addEventListener('click', () => socket.emit('host:reset'));
+$('multiToggle').addEventListener('change', (e) => {
+  socket.emit('host:settings', { allowMultiple: e.target.checked });
+});
 
 // ------------------------------------------------------------ server events
 
@@ -109,9 +157,10 @@ resetBtn.addEventListener('click', () => socket.emit('host:reset'));
 socket.on('host:snapshot', (snap) => {
   roundStatus = snap.status;
   answers = snap.answers;
+  players = snap.players;
+  $('multiToggle').checked = snap.allowMultiple;
   renderStatus();
-  renderFeed();
-  renderPlayers(snap.players);
+  renderFeed(); // also re-renders the player list
   syncTimer(snap);
 });
 
@@ -122,7 +171,10 @@ socket.on('host:answer', (answer) => {
 });
 
 // host:players — someone joined or left.
-socket.on('host:players', renderPlayers);
+socket.on('host:players', (list) => {
+  players = list;
+  renderPlayers();
+});
 
 // On (re)connect, reclaim our room if we already had one (survives page reloads).
 socket.on('connect', () => {
