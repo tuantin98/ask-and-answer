@@ -40,7 +40,7 @@ Mở trình duyệt:
 3. Host đọc câu hỏi rồi bấm **MỞ CÂU HỎI** → ô trả lời của người chơi được mở.
 4. Người chơi nhập đáp án, bấm **GỬI** hoặc Enter → ô khóa lại, hiện "Đã gửi thành công! Thời gian: X.XX giây". Mỗi người chỉ gửi 1 lần/câu.
 5. Màn hình Host hiện câu trả lời ngay lập tức, người nhanh nhất ở trên cùng.
-6. **KHÓA / DỪNG** để ngừng nhận đáp án; **XÓA LƯỢT** để xóa danh sách và chờ câu tiếp theo. (Bấm **MỞ CÂU HỎI** lần nữa cũng bắt đầu câu mới.)
+6. **KHÓA / DỪNG** để tạm ngừng nhận đáp án; bấm **MỞ LẠI** để tiếp tục câu hiện tại (giữ nguyên danh sách đã trả lời, đồng hồ chạy tiếp). **XÓA LƯỢT** là cách duy nhất để xóa danh sách và chờ câu tiếp theo.
 
 Host hoặc người chơi tải lại trang vẫn tự động vào lại phòng cũ. Phòng bị xóa sau 10 phút nếu Host rời đi.
 
@@ -64,8 +64,8 @@ Host hoặc người chơi tải lại trang vẫn tự động vào lại phòn
 |---|---|---|
 | `host:create` | Host → Server | Tạo phòng, trả về mã phòng |
 | `host:rejoin` | Host → Server | Lấy lại phòng sau khi tải lại trang |
-| `host:start` | Host → Server | Mở câu hỏi: lưu `startTime = Date.now()`, xóa đáp án cũ |
-| `host:lock` | Host → Server | Khóa, không nhận đáp án nữa |
+| `host:start` | Host → Server | Mở câu hỏi mới (lưu `startTime = Date.now()`), hoặc mở lại câu đang khóa (giữ đáp án, bỏ qua thời gian tạm dừng) |
+| `host:lock` | Host → Server | Khóa/tạm dừng, không nhận đáp án nữa |
 | `host:reset` | Host → Server | Xóa đáp án, về trạng thái chờ |
 | `player:join` | Player → Server | Vào phòng với mã + tên (tên không được trùng) |
 | `player:answer` | Player → Server | Gửi đáp án; server tính `responseTime = (Date.now() - startTime) / 1000` |
