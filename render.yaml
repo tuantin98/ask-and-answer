@@ -1,0 +1,15 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Rooms live in server memory, so keep this to a single instance.
+services:
+  - type: web
+    name: ask-and-answer
+    runtime: node
+    plan: free
+    region: singapore # closest Render region to Vietnam
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true # redeploy on every push to the connected branch
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

@@ -34,6 +34,22 @@ Mở trình duyệt:
 2. Người chơi mở `http://192.168.1.10:3000/` (có thể gửi link `http://192.168.1.10:3000/?room=MÃPHÒNG` để điền sẵn mã).
 3. Nếu không vào được, cho phép Node.js qua Windows Firewall.
 
+## Đưa lên online (Render)
+
+Repo có sẵn [`render.yaml`](render.yaml) để deploy lên [Render](https://render.com) (gói Free, region Singapore).
+
+1. Đăng nhập Render bằng tài khoản GitHub.
+2. **New → Blueprint** → chọn repo này → **Apply**. Render tự đọc `render.yaml`, chạy `npm ci` rồi `npm start`.
+3. Khi deploy xong sẽ có link dạng `https://ask-and-answer-xxxx.onrender.com`:
+   - Host: `https://…onrender.com/host`
+   - Player: `https://…onrender.com/`
+4. Mỗi lần push lên nhánh `main`, Render tự deploy lại.
+
+Lưu ý:
+- **Gói Free tự ngủ** sau khoảng 15 phút không có truy cập; lần mở đầu tiên mất 30–60 giây để khởi động. Nên mở trang trước buổi chơi vài phút.
+- Phòng và đáp án nằm trong RAM: server **ngủ, khởi động lại hoặc deploy lại** thì mọi phòng đều mất.
+- Chỉ chạy **1 instance** (không bật scale), vì các phòng không được chia sẻ giữa nhiều server.
+
 ## Cách chơi
 1. Host mở `/host` → bấm **TẠO PHÒNG** → đọc mã phòng cho người chơi.
 2. Người chơi nhập mã phòng + họ tên → **VÀO PHÒNG**. Ô trả lời bị khóa, hiển thị "Đang chờ Host mở câu hỏi...".
@@ -49,6 +65,7 @@ Host hoặc người chơi tải lại trang vẫn tự động vào lại phòn
 ```
 ├── server.js            # Express + Socket.io, toàn bộ logic phòng/lượt chơi
 ├── package.json
+├── render.yaml          # Cấu hình deploy lên Render
 └── public/
     ├── index.html       # Giao diện Player  (/)
     ├── host.html        # Giao diện Host    (/host)
