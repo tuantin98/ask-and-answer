@@ -54,7 +54,7 @@ Lưu ý:
 1. Host mở `/host` → bấm **TẠO PHÒNG** → đọc mã phòng cho người chơi.
 2. Người chơi nhập mã phòng + họ tên → **VÀO PHÒNG**. Ô trả lời bị khóa, hiển thị "Đang chờ Host mở câu hỏi...".
 3. Host đọc câu hỏi rồi bấm **MỞ CÂU HỎI** → ô trả lời của người chơi được mở.
-4. Người chơi nhập đáp án, bấm **GỬI** hoặc Enter → ô khóa lại, hiện "Đã gửi thành công! Thời gian: X.XX giây". Mỗi người chỉ gửi 1 lần/câu.
+4. Người chơi nhập đáp án (tối đa 500 ký tự, Shift+Enter để xuống dòng), bấm **GỬI** hoặc Enter → ô khóa lại, hiện "Đã gửi thành công! Thời gian: X.XX giây". Mỗi người chỉ gửi 1 lần/câu.
 5. Màn hình Host hiện câu trả lời ngay lập tức, người nhanh nhất ở trên cùng.
 6. **KHÓA / DỪNG** để tạm ngừng nhận đáp án; bấm **MỞ LẠI** để tiếp tục câu hiện tại (giữ nguyên danh sách đã trả lời, đồng hồ chạy tiếp). **XÓA LƯỢT** là cách duy nhất để xóa danh sách và chờ câu tiếp theo.
 

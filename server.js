@@ -8,7 +8,7 @@ const express = require('express');
 const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
-const MAX_ANSWER_LENGTH = 200;
+const MAX_ANSWER_LENGTH = 500; // keep in sync with maxlength on #answerInput in public/index.html
 const MAX_NAME_LENGTH = 30;
 const ROOM_TTL_MS = 10 * 60 * 1000; // delete a room 10 minutes after its host disconnects
 const MAX_ANSWERS_PER_ROUND = 20; // per-player cap when multiple answers are allowed
@@ -211,7 +211,8 @@ io.on('connection', (socket) => {
     if (!room || !name) return ack?.({ ok: false, error: 'Bạn chưa vào phòng.' });
     if (room.status !== 'open') return ack?.({ ok: false, error: 'Câu hỏi chưa mở hoặc đã bị khóa.' });
 
-    text = clean(text, MAX_ANSWER_LENGTH);
+    // Answers may span lines: normalize line endings and squeeze runs of blank lines.
+    text = clean(String(text ?? '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n'), MAX_ANSWER_LENGTH);
     if (!text) return ack?.({ ok: false, error: 'Câu trả lời không được để trống.' });
 
     const key = name.toLowerCase();
