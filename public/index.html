@@ -31,7 +31,8 @@
       </div>
       <div id="status" class="status">Đang chờ Host mở câu hỏi...</div>
       <form id="answerForm">
-        <input id="answerInput" type="text" maxlength="200" autocomplete="off" placeholder="Nhập câu trả lời..." disabled />
+        <textarea id="answerInput" rows="2" maxlength="500" autocomplete="off" placeholder="Nhập câu trả lời... (Shift+Enter để xuống dòng)" disabled></textarea>
+        <div id="charCount" class="char-count">0/500</div>
         <button id="submitBtn" type="submit" class="full green" disabled>GỬI CÂU TRẢ LỜI</button>
         <p id="answerError" class="error"></p>
       </form>

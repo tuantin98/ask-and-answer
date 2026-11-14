@@ -39,7 +39,8 @@ h1 { font-size: 1.6rem; margin: 0 0 4px; }
 
 label { display: block; font-weight: 600; font-size: 0.9rem; margin: 12px 0 6px; }
 
-input[type="text"] {
+input[type="text"],
+textarea {
   width: 100%;
   font-size: 1.05rem;
   padding: 12px 14px;
@@ -48,8 +49,13 @@ input[type="text"] {
   outline: none;
   transition: border-color 0.15s;
 }
-input[type="text"]:focus { border-color: var(--primary); }
-input[type="text"]:disabled { background: #eef0f6; color: var(--muted); cursor: not-allowed; }
+textarea { font-family: inherit; line-height: 1.4; resize: none; max-height: 40vh; }
+input[type="text"]:focus,
+textarea:focus { border-color: var(--primary); }
+input[type="text"]:disabled,
+textarea:disabled { background: #eef0f6; color: var(--muted); cursor: not-allowed; }
+.char-count { text-align: right; font-size: 0.8rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.char-count.near-limit { color: var(--orange); font-weight: 600; }
 #roomCodeInput { text-transform: uppercase; letter-spacing: 4px; font-weight: 700; }
 
 button {
@@ -118,7 +124,7 @@ button.gray:hover:not(:disabled) { background: #475569; }
 .feed li:first-child { background: #fef9c3; border-radius: 8px; }
 .feed .rank { font-weight: 800; color: var(--muted); text-align: center; }
 .feed .name { font-weight: 700; overflow-wrap: anywhere; }
-.feed .answer { overflow-wrap: anywhere; }
+.feed .answer { overflow-wrap: anywhere; white-space: pre-wrap; }
 .feed .time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--primary); }
 .empty { color: var(--muted); text-align: center; padding: 20px 0; }
 .players { color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }

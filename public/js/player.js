@@ -14,6 +14,7 @@ const answerForm = $('answerForm');
 const answerInput = $('answerInput');
 const submitBtn = $('submitBtn');
 const answerError = $('answerError');
+const charCount = $('charCount');
 
 let session = null;        // { code, name } once joined
 let roundStatus = 'idle';  // mirrors the server: idle | open | locked
@@ -81,8 +82,32 @@ joinForm.addEventListener('submit', (e) => {
   join(roomCodeInput.value.trim().toUpperCase(), nameInput.value.trim());
 });
 
+// Grow the textarea with its content and show how many characters are left.
+function syncAnswerBox() {
+  answerInput.style.height = 'auto';
+  answerInput.style.height = `${answerInput.scrollHeight + 4}px`; // +4 for the 2px borders
+  const len = answerInput.value.length;
+  charCount.textContent = `${len}/${answerInput.maxLength}`;
+  charCount.classList.toggle('near-limit', len >= answerInput.maxLength * 0.9);
+}
+
+function clearAnswerBox() {
+  answerInput.value = '';
+  syncAnswerBox();
+}
+
+answerInput.addEventListener('input', syncAnswerBox);
+
+// Enter sends, Shift+Enter adds a new line (ignored while an IME is composing, e.g. Vietnamese Telex).
+answerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    answerForm.requestSubmit();
+  }
+});
+
 answerForm.addEventListener('submit', (e) => {
-  e.preventDefault(); // also handles the Enter key
+  e.preventDefault();
   const text = answerInput.value.trim();
   if (!text || submitBtn.disabled) return;
 
@@ -94,7 +119,7 @@ answerForm.addEventListener('submit', (e) => {
   socket.emit('player:answer', { text }, (res) => {
     if (res.ok) {
       submitted = { count: res.count, responseTime: res.responseTime };
-      answerInput.value = '';
+      clearAnswerBox();
     } else {
       answerError.textContent = res.error;
     }
@@ -107,7 +132,7 @@ socket.on('round:state', (state) => {
   if (state.roundId !== roundId) {
     // A new round started: forget the previous answer.
     submitted = null;
-    answerInput.value = '';
+    clearAnswerBox();
     answerError.textContent = '';
   }
   if (state.status === 'idle') submitted = null;
