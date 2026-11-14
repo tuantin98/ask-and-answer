@@ -3,22 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ask &amp; Answer – Người chơi</title>
+  <title data-i18n="player.title">Ask &amp; Answer – Người chơi</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
   <main class="container narrow">
-    <h1>Ask &amp; Answer</h1>
-    <p class="subtitle">Trả lời nhanh nhất để giành chiến thắng!</p>
+    <header class="page-header">
+      <div>
+        <h1>Ask &amp; Answer</h1>
+        <p class="subtitle" data-i18n="player.subtitle">Trả lời nhanh nhất để giành chiến thắng!</p>
+      </div>
+      <select id="langSelect" class="lang-select" data-i18n-aria-label="lang.label" aria-label="Ngôn ngữ"></select>
+    </header>
 
     <!-- Join screen -->
     <section id="joinScreen" class="card">
       <form id="joinForm">
-        <label for="roomCodeInput">Mã phòng</label>
-        <input id="roomCodeInput" type="text" maxlength="10" autocomplete="off" placeholder="VD: AB3KD" required />
-        <label for="nameInput">Họ tên</label>
-        <input id="nameInput" type="text" maxlength="30" autocomplete="off" placeholder="Tên của bạn" required />
-        <button type="submit" class="full">VÀO PHÒNG</button>
+        <label for="roomCodeInput" data-i18n="player.roomCode">Mã phòng</label>
+        <input id="roomCodeInput" type="text" maxlength="10" autocomplete="off" placeholder="VD: AB3KD" data-i18n-placeholder="player.roomCodePh" required />
+        <label for="nameInput" data-i18n="player.name">Họ tên</label>
+        <input id="nameInput" type="text" maxlength="30" autocomplete="off" placeholder="Tên của bạn" data-i18n-placeholder="player.namePh" required />
+        <button type="submit" class="full" data-i18n="player.join">VÀO PHÒNG</button>
         <p id="joinError" class="error"></p>
       </form>
     </section>
@@ -26,14 +31,14 @@
     <!-- Game screen -->
     <section id="gameScreen" class="card hidden">
       <div class="room-meta">
-        <span>Phòng: <strong id="roomLabel"></strong></span>
-        <span>Bạn: <strong id="nameLabel"></strong></span>
+        <span><span data-i18n="player.room">Phòng:</span> <strong id="roomLabel"></strong></span>
+        <span><span data-i18n="player.you">Bạn:</span> <strong id="nameLabel"></strong></span>
       </div>
       <div id="status" class="status">Đang chờ Host mở câu hỏi...</div>
       <form id="answerForm">
-        <textarea id="answerInput" rows="2" maxlength="500" autocomplete="off" placeholder="Nhập câu trả lời... (Shift+Enter để xuống dòng)" disabled></textarea>
+        <textarea id="answerInput" rows="2" maxlength="500" autocomplete="off" placeholder="Nhập câu trả lời... (Shift+Enter để xuống dòng)" data-i18n-placeholder="player.answerPh" disabled></textarea>
         <div id="charCount" class="char-count">0/500</div>
-        <button id="submitBtn" type="submit" class="full green" disabled>GỬI CÂU TRẢ LỜI</button>
+        <button id="submitBtn" type="submit" class="full green" disabled data-i18n="player.submit">GỬI CÂU TRẢ LỜI</button>
         <p id="answerError" class="error"></p>
       </form>
     </section>
@@ -41,6 +46,7 @@
 
   <!-- Socket.io client is served automatically by the Socket.io server -->
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/player.js"></script>
 </body>
 </html>

@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ask &amp; Answer – Host</title>
+  <title data-i18n="host.title">Ask &amp; Answer – Host</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
   <main class="container">
-    <h1>Ask &amp; Answer – Host</h1>
-    <p class="subtitle">Tạo phòng, mở câu hỏi và xem câu trả lời theo thời gian thực.</p>
+    <header class="page-header">
+      <div>
+        <h1 data-i18n="host.title">Ask &amp; Answer – Host</h1>
+        <p class="subtitle" data-i18n="host.subtitle">Tạo phòng, mở câu hỏi và xem câu trả lời theo thời gian thực.</p>
+      </div>
+      <select id="langSelect" class="lang-select" data-i18n-aria-label="lang.label" aria-label="Ngôn ngữ"></select>
+    </header>
 
     <!-- Before a room exists -->
     <section id="createScreen" class="card">
-      <button id="createBtn" class="full">TẠO PHÒNG</button>
+      <button id="createBtn" class="full" data-i18n="host.create">TẠO PHÒNG</button>
       <p id="hostError" class="error"></p>
     </section>
 
@@ -21,10 +26,10 @@
     <section id="roomScreen" class="hidden">
       <div class="card row-between">
         <div>
-          <div class="subtitle" style="margin:0">Mã phòng</div>
+          <div class="subtitle" style="margin:0" data-i18n="host.roomCode">Mã phòng</div>
           <div id="roomCode" class="room-code"></div>
         </div>
-        <button id="newRoomBtn" class="gray">Tạo phòng mới</button>
+        <button id="newRoomBtn" class="gray" data-i18n="host.newRoom">Tạo phòng mới</button>
       </div>
 
       <div class="card">
@@ -34,36 +39,37 @@
         </div>
         <div class="controls">
           <button id="startBtn" class="green">MỞ CÂU HỎI</button>
-          <button id="lockBtn" class="orange" disabled>KHÓA / DỪNG</button>
-          <button id="resetBtn" class="gray">XÓA LƯỢT</button>
+          <button id="lockBtn" class="orange" disabled data-i18n="host.lock">KHÓA / DỪNG</button>
+          <button id="resetBtn" class="gray" data-i18n="host.reset">XÓA LƯỢT</button>
         </div>
         <label class="toggle">
           <input id="multiToggle" type="checkbox" />
-          <span>Cho phép người chơi trả lời nhiều lần trong một câu</span>
+          <span data-i18n="host.allowMultiple">Cho phép người chơi trả lời nhiều lần trong một câu</span>
         </label>
       </div>
 
       <div class="card">
         <div class="row-between" style="margin-bottom:8px">
-          <strong><span class="live-dot"></span>Người chơi đang online</strong>
-          <span class="players"><span id="playerCount">0</span> người</span>
+          <strong><span class="live-dot"></span><span data-i18n="host.playersOnline">Người chơi đang online</span></strong>
+          <span id="playerCount" class="players">0 người</span>
         </div>
         <ul id="playerList" class="player-list"></ul>
-        <p id="emptyPlayers" class="empty">Chưa có ai vào phòng.</p>
+        <p id="emptyPlayers" class="empty" data-i18n="host.noPlayers">Chưa có ai vào phòng.</p>
       </div>
 
       <div class="card">
         <div class="row-between" style="margin-bottom:8px">
-          <strong>Câu trả lời</strong>
+          <strong data-i18n="host.answers">Câu trả lời</strong>
           <span id="answerCount" class="players">0 người đã trả lời</span>
         </div>
         <ul id="feed" class="feed"></ul>
-        <p id="emptyFeed" class="empty">Chưa có câu trả lời nào.</p>
+        <p id="emptyFeed" class="empty" data-i18n="host.noAnswers">Chưa có câu trả lời nào.</p>
       </div>
     </section>
   </main>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/host.js"></script>
 </body>
 </html>
