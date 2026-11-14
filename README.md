@@ -50,6 +50,12 @@ Lưu ý:
 - Phòng và đáp án nằm trong RAM: server **ngủ, khởi động lại hoặc deploy lại** thì mọi phòng đều mất.
 - Chỉ chạy **1 instance** (không bật scale), vì các phòng không được chia sẻ giữa nhiều server.
 
+## Ngôn ngữ
+
+Cả trang Người chơi và Host có ô chọn ngôn ngữ ở góc trên bên phải: **Tiếng Việt**, **English**, **Français**. Lựa chọn được lưu trên trình duyệt; lần đầu truy cập sẽ theo ngôn ngữ của trình duyệt (mặc định Tiếng Việt). Mỗi người chọn ngôn ngữ riêng, không ảnh hưởng người khác.
+
+Thêm/sửa bản dịch trong `public/js/i18n.js`. Server chỉ trả về mã lỗi (vd. `nameTaken`), client tự dịch.
+
 ## Cách chơi
 1. Host mở `/host` → bấm **TẠO PHÒNG** → đọc mã phòng cho người chơi.
 2. Người chơi nhập mã phòng + họ tên → **VÀO PHÒNG**. Ô trả lời bị khóa, hiển thị "Đang chờ Host mở câu hỏi...".
@@ -71,6 +77,7 @@ Host hoặc người chơi tải lại trang vẫn tự động vào lại phòn
     ├── host.html        # Giao diện Host    (/host)
     ├── css/style.css
     └── js/
+        ├── i18n.js      # Bản dịch Tiếng Việt / English / Français + nút chọn ngôn ngữ
         ├── player.js
         └── host.js
 ```

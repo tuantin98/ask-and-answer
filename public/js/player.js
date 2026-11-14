@@ -26,7 +26,7 @@ let submitted = null;      // { count, responseTime of the latest } after a succ
 const urlRoom = new URLSearchParams(location.search).get('room');
 if (urlRoom) roomCodeInput.value = urlRoom.toUpperCase();
 
-function render() {
+function render(focus = true) {
   const canAnswer = roundStatus === 'open' && (!submitted || allowMultiple);
   answerInput.disabled = !canAnswer;
   submitBtn.disabled = !canAnswer;
@@ -34,27 +34,25 @@ function render() {
   statusEl.className = 'status';
   if (submitted) {
     statusEl.classList.add('sent');
-    const time = `Thời gian: ${submitted.responseTime.toFixed(2)} giây`;
-    statusEl.textContent = canAnswer
-      ? `Đã gửi ${submitted.count} lần (lần gần nhất: ${submitted.responseTime.toFixed(2)} giây) – bạn có thể gửi tiếp.`
-      : `Đã gửi thành công! ${time}`;
+    const params = { count: submitted.count, time: submitted.responseTime.toFixed(2) };
+    statusEl.textContent = t(canAnswer ? 'player.status.sentMore' : 'player.status.sent', params);
   } else if (roundStatus === 'open') {
     statusEl.classList.add('open');
-    statusEl.textContent = 'Câu hỏi đã mở – Trả lời ngay!';
+    statusEl.textContent = t('player.status.open');
   } else if (roundStatus === 'locked') {
     statusEl.classList.add('locked');
-    statusEl.textContent = 'Đã khóa – hết thời gian trả lời.';
+    statusEl.textContent = t('player.status.locked');
   } else {
-    statusEl.textContent = 'Đang chờ Host mở câu hỏi...';
+    statusEl.textContent = t('player.status.waiting');
   }
-  if (canAnswer) answerInput.focus();
+  if (canAnswer && focus) answerInput.focus();
 }
 
 function join(code, name) {
   // player:join — ask the server to add us to the room.
   socket.emit('player:join', { code, name }, (res) => {
     if (!res.ok) {
-      joinError.textContent = res.error;
+      showError(joinError, res);
       session = null;
       sessionStorage.removeItem('aa-player');
       joinScreen.classList.remove('hidden');
@@ -70,7 +68,7 @@ function join(code, name) {
 
     $('roomLabel').textContent = session.code;
     $('nameLabel').textContent = session.name;
-    joinError.textContent = '';
+    setI18nText(joinError, null);
     joinScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     render();
@@ -113,7 +111,7 @@ answerForm.addEventListener('submit', (e) => {
 
   answerInput.disabled = true; // lock immediately to prevent double-submits
   submitBtn.disabled = true;
-  answerError.textContent = '';
+  setI18nText(answerError, null);
 
   // player:answer — send the text; the server replies with our response time.
   socket.emit('player:answer', { text }, (res) => {
@@ -121,7 +119,7 @@ answerForm.addEventListener('submit', (e) => {
       submitted = { count: res.count, responseTime: res.responseTime };
       clearAnswerBox();
     } else {
-      answerError.textContent = res.error;
+      showError(answerError, res);
     }
     render();
   });
@@ -133,7 +131,7 @@ socket.on('round:state', (state) => {
     // A new round started: forget the previous answer.
     submitted = null;
     clearAnswerBox();
-    answerError.textContent = '';
+    setI18nText(answerError, null);
   }
   if (state.status === 'idle') submitted = null;
   roundId = state.roundId;
@@ -146,9 +144,15 @@ socket.on('round:state', (state) => {
 socket.on('room:closed', () => {
   sessionStorage.removeItem('aa-player');
   session = null;
-  joinError.textContent = 'Phòng đã đóng.';
+  setI18nText(joinError, 'player.roomClosed');
   joinScreen.classList.remove('hidden');
   gameScreen.classList.add('hidden');
+});
+
+// langchange — static text is already re-translated by i18n.js; redo the status line
+// without pulling focus away from the language picker.
+document.addEventListener('langchange', () => {
+  if (session) render(false);
 });
 
 // On (re)connect, automatically rejoin the last room (survives reloads and network blips).

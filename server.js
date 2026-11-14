@@ -12,6 +12,7 @@ const MAX_ANSWER_LENGTH = 500; // keep in sync with maxlength on #answerInput in
 const MAX_NAME_LENGTH = 30;
 const ROOM_TTL_MS = 10 * 60 * 1000; // delete a room 10 minutes after its host disconnects
 const MAX_ANSWERS_PER_ROUND = 20; // per-player cap when multiple answers are allowed
+// Failed acks carry an error code ({ ok: false, error: 'nameTaken', ... }); public/js/i18n.js translates it.
 
 const app = express();
 const server = http.createServer(app);
@@ -109,7 +110,7 @@ io.on('connection', (socket) => {
   // host:rejoin — host page reloaded / reconnected; reclaim an existing room.
   socket.on('host:rejoin', ({ code } = {}, ack) => {
     const room = rooms[clean(code, 10).toUpperCase()];
-    if (!room) return ack?.({ ok: false, error: 'Phòng không còn tồn tại.' });
+    if (!room) return ack?.({ ok: false, error: 'roomGone' });
     clearTimeout(room.cleanupTimer);
     room.cleanupTimer = null;
     room.hostSocketId = socket.id;
@@ -180,13 +181,13 @@ io.on('connection', (socket) => {
   socket.on('player:join', ({ code, name } = {}, ack) => {
     const room = rooms[clean(code, 10).toUpperCase()];
     name = clean(name, MAX_NAME_LENGTH);
-    if (!room) return ack?.({ ok: false, error: 'Mã phòng không tồn tại.' });
-    if (!name) return ack?.({ ok: false, error: 'Vui lòng nhập tên.' });
+    if (!room) return ack?.({ ok: false, error: 'roomNotFound' });
+    if (!name) return ack?.({ ok: false, error: 'nameRequired' });
 
     const taken = [...room.players.entries()].some(
       ([id, p]) => id !== socket.id && p.name.toLowerCase() === name.toLowerCase()
     );
-    if (taken) return ack?.({ ok: false, error: 'Tên này đã có người dùng trong phòng.' });
+    if (taken) return ack?.({ ok: false, error: 'nameTaken' });
 
     socket.join(room.code);
     socket.data.playerOf = room.code;
@@ -208,18 +209,18 @@ io.on('connection', (socket) => {
     const receivedAt = Date.now(); // capture first, before any other work
     const room = rooms[socket.data.playerOf];
     const name = socket.data.name;
-    if (!room || !name) return ack?.({ ok: false, error: 'Bạn chưa vào phòng.' });
-    if (room.status !== 'open') return ack?.({ ok: false, error: 'Câu hỏi chưa mở hoặc đã bị khóa.' });
+    if (!room || !name) return ack?.({ ok: false, error: 'notJoined' });
+    if (room.status !== 'open') return ack?.({ ok: false, error: 'notOpen' });
 
     // Answers may span lines: normalize line endings and squeeze runs of blank lines.
     text = clean(String(text ?? '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n'), MAX_ANSWER_LENGTH);
-    if (!text) return ack?.({ ok: false, error: 'Câu trả lời không được để trống.' });
+    if (!text) return ack?.({ ok: false, error: 'emptyAnswer' });
 
     const key = name.toLowerCase();
     const count = room.answerCounts.get(key) || 0;
-    if (count && !room.allowMultiple) return ack?.({ ok: false, error: 'Bạn đã gửi câu trả lời rồi.' });
+    if (count && !room.allowMultiple) return ack?.({ ok: false, error: 'alreadyAnswered' });
     if (count >= MAX_ANSWERS_PER_ROUND) {
-      return ack?.({ ok: false, error: `Tối đa ${MAX_ANSWERS_PER_ROUND} lần trả lời mỗi câu.` });
+      return ack?.({ ok: false, error: 'tooManyAnswers', max: MAX_ANSWERS_PER_ROUND });
     }
 
     const answer = { name, text, responseTime: (receivedAt - room.startTime) / 1000, attempt: count + 1 };

@@ -26,6 +26,21 @@ body {
 .narrow { max-width: 440px; }
 
 h1 { font-size: 1.6rem; margin: 0 0 4px; }
+
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lang-select {
+  flex-shrink: 0;
+  margin-top: 4px;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+.lang-select:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
 .subtitle { color: var(--muted); margin: 0 0 24px; }
 
 .card {

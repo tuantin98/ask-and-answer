@@ -22,13 +22,12 @@ let rafId = null;
 // ---------------------------------------------------------------- rendering
 
 function renderStatus() {
-  const labels = { idle: 'Chưa mở câu hỏi', open: 'Đang nhận câu trả lời...', locked: 'Đã khóa' };
   statusEl.className = `status ${roundStatus === 'idle' ? '' : roundStatus}`;
-  statusEl.textContent = labels[roundStatus];
+  statusEl.textContent = t(`host.status.${roundStatus}`);
   lockBtn.disabled = roundStatus !== 'open';
   // Reopening a locked round resumes it (answers kept); only "XÓA LƯỢT" clears them.
   startBtn.disabled = roundStatus === 'open';
-  startBtn.textContent = roundStatus === 'locked' ? 'MỞ LẠI' : 'MỞ CÂU HỎI';
+  startBtn.textContent = t(roundStatus === 'locked' ? 'host.reopen' : 'host.start');
 }
 
 function answerRow(a, index) {
@@ -49,7 +48,7 @@ function answerRow(a, index) {
   if (a.attempt > 1) {
     const attempt = document.createElement('span');
     attempt.className = 'attempt';
-    attempt.textContent = ` (lần ${a.attempt})`;
+    attempt.textContent = t('host.attempt', { n: a.attempt });
     li.querySelector('.name').appendChild(attempt);
   }
   return li;
@@ -66,8 +65,7 @@ function renderFeed() {
   answers.sort((a, b) => a.responseTime - b.responseTime); // fastest on top
   feed.replaceChildren(...answers.map(answerRow));
   const people = answerCounts().size;
-  $('answerCount').textContent =
-    `${people} người đã trả lời` + (answers.length > people ? ` · ${answers.length} lượt` : '');
+  $('answerCount').textContent = t('host.answerCount', { people, total: answers.length });
   $('emptyFeed').classList.toggle('hidden', answers.length > 0);
   renderPlayers();
 }
@@ -82,15 +80,15 @@ function playerChip(p, counts) {
   name.textContent = p.name;
   const since = document.createElement('span');
   since.className = 'since';
-  since.textContent = new Date(p.joinedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  since.title = 'Thời điểm vào phòng';
+  since.textContent = new Date(p.joinedAt).toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' });
+  since.title = t('host.joinedAt');
   li.append(name, since);
 
   if (count) {
     const badge = document.createElement('span');
     badge.className = 'badge';
     badge.textContent = count > 1 ? `✓ ${count}` : '✓';
-    badge.title = `Đã trả lời ${count} lần`;
+    badge.title = t('host.answeredTimes', { n: count });
     li.appendChild(badge);
   }
   return li;
@@ -100,7 +98,7 @@ function renderPlayers() {
   const counts = answerCounts();
   $('playerList').replaceChildren(...players.map((p) => playerChip(p, counts)));
   knownPlayers = new Set(players.map((p) => p.name));
-  $('playerCount').textContent = players.length;
+  $('playerCount').textContent = t('host.playerCount', { n: players.length });
   $('emptyPlayers').classList.toggle('hidden', players.length > 0);
 }
 
@@ -128,10 +126,11 @@ function showRoom(code) {
   roomScreen.classList.remove('hidden');
 }
 
-function showCreate(error = '') {
+// `res` is the failed server reply whose error should be shown.
+function showCreate(res) {
   roomCode = null;
   sessionStorage.removeItem('aa-host-room');
-  $('hostError').textContent = error;
+  showError($('hostError'), res);
   roomScreen.classList.add('hidden');
   createScreen.classList.remove('hidden');
 }
@@ -145,7 +144,7 @@ function createRoom() {
 
 $('createBtn').addEventListener('click', createRoom);
 $('newRoomBtn').addEventListener('click', () => {
-  if (confirm('Tạo phòng mới? Người chơi sẽ phải nhập mã mới.')) createRoom();
+  if (confirm(t('host.confirmNewRoom'))) createRoom();
 });
 startBtn.addEventListener('click', () => socket.emit('host:start'));
 lockBtn.addEventListener('click', () => socket.emit('host:lock'));
@@ -179,11 +178,17 @@ socket.on('host:players', (list) => {
   renderPlayers();
 });
 
+// langchange — static text is already re-translated by i18n.js; redo the dynamic parts.
+document.addEventListener('langchange', () => {
+  renderStatus();
+  renderFeed(); // also re-renders the player list
+});
+
 // On (re)connect, reclaim our room if we already had one (survives page reloads).
 socket.on('connect', () => {
   if (!roomCode) return;
   socket.emit('host:rejoin', { code: roomCode }, (res) => {
     if (res.ok) showRoom(res.code);
-    else showCreate(res.error);
+    else showCreate(res);
   });
 });
